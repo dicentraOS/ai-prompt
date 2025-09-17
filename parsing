@@ -1,0 +1,19 @@
+val modelBuffer = TFLiteHelper.loadModelFile(this, "prompt_model.tflite")
+val interpreter = TFLiteHelper.createGpuInterpreter(modelBuffer)
+
+runButton.setOnClickListener {
+  val prompt = input.text.toString().lowercase()
+
+  // Preprocess: very simple one-hot vector for keywords
+  val inputVec = FloatArray(4) // [hasCube, hasSpin, hasSphere, hasStop]
+  if ("cube" in prompt) inputVec[0] = 1f
+  if ("spin" in prompt) inputVec[1] = 1f
+  if ("sphere" in prompt) inputVec[2] = 1f
+  if ("stop" in prompt) inputVec[3] = 1f
+
+  val output = Array(1) { FloatArray(2) } // [drawCube, spinSpeed]
+  interpeter.run(arrayOf(InputVec), output)
+
+  renderer.showCube = output[0][0] > 0.5f
+  renderer.isSpinning = output[0][1] > 0.5f
+}
