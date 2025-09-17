@@ -1,1 +1,51 @@
+val modelBuffer = TFLiteHelper.loadModelFile(this, "prompt_model.tflite")
+val interpreter = TFLiteHelper.createGpuInterpreter(modelBuffer)
 
+TFLiteHelper is just a training model that loads certain data into memory for functions.
+These functions are loadModelFile and createGpuInterpreter, which act both as separate functions
+to allow an interpeter to work with a model file to generate a cube object based off the written AI commands.
+
+runButton.setOnClickListener {
+  val prompt = input.text.toString().lowercase()
+
+When a button is clicked, an input() function is triggered that
+converts keywords into their lowercase versions for better
+readability
+
+val inputVec = FloatArray(4) // [hasCube, hasSpin, hasSphere, hasStop]
+if ("cube" in prompt) inputVec[0] = 1f
+if ("spin" in prompt) inputVec[1] = 1f
+if ("sphere" in prompt) inputVec[2] = 1f
+if ("stop" in prompt) inputVec[3] = 1f
+
+These are just input values assigned to each specific keyword, and a lot
+of these valus are actually spread between ones and zeroes to describe
+the word mentioned. For example, here is the binary code for the AI to
+know which object to generate:
+
+[1, 0, 0, 0] -> "cube"
+[0, 1, 0, 0] -> "spin"
+[1, 1, 0, 0] -> "cube spin"
+
+The input here is followed by FloatArray(4), as there are four float values
+that string a set of binary for the AI to understand the objects to generate
+
+val output = Array(1) { FloatArray(2) } // [drawCube, spinSpeed]
+
+Followed by the float values, the AI prompt is then split between assigning
+to variables to determine both the speed and demonstration of the cube. In this
+case, these values are spinSpeed, and and drawCube.
+
+interpreter.run(arrayOf(inputVec), output)
+
+This takes the input values and sends it to an output
+via the command arrayOf.
+
+renderer.showCube = output[0][0] > 0.5f
+renderer.isSpinning = output[0][1] > 0.5f
+
+This is an updater that configures the rate at which a cube is
+spinning and generating. Both values are set to greater than 0.5
+to allow the functions to take place, we call these boolean values.
+A boolean value takes the probability of something and turns it into
+output values.
